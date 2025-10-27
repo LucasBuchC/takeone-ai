@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'TakeOne.ai - Crie Roteiros Profissionais com IA',
+  description: 'Transforme suas ideias em roteiros envolventes para YouTube, TikTok e Instagram em segundos. 5 créditos gratuitos. Sem cartão de crédito.',
+}
 
 export default function Home() {
   return (

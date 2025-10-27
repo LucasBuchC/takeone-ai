@@ -1,7 +1,12 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
+export const metadata: Metadata = {
+  title: 'Dashboard',
+  description: 'Gerencie seus projetos e roteiros',
+}
 export default async function DashboardLayout({
   children,
 }: {

@@ -3,6 +3,12 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Novo Projeto',
+  description: 'Crie um novo projeto de roteiro com IA',
+}
 
 export default function NewProjectPage() {
   const [title, setTitle] = useState('')
@@ -33,6 +39,7 @@ export default function NewProjectPage() {
           title,
           video_type: videoType,
           duration,
+          last_prompt: prompt,
         })
         .select()
         .single()
@@ -40,7 +47,7 @@ export default function NewProjectPage() {
       if (error) throw error
 
       setProjectId(project.id)
-      
+
       // 2. Gerar roteiro automaticamente
       await generateScript(project.id)
     } catch (error: any) {

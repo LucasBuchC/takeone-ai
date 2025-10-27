@@ -1,41 +1,37 @@
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import "./globals.css";
-
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+import type { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
-};
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  display: "swap",
-  subsets: ["latin"],
-});
+  title: {
+    default: 'TakeOne.ai - Roteiros Profissionais com IA',
+    template: '%s | TakeOne.ai'
+  },
+  description: 'Crie roteiros incríveis para YouTube, TikTok e Instagram em segundos. Powered by Azure OpenAI.',
+  keywords: ['roteiro', 'IA', 'inteligência artificial', 'YouTube', 'TikTok', 'vídeo', 'conteúdo'],
+  authors: [{ name: 'TakeOne.ai' }],
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: 'https://seu-app.vercel.app',
+    siteName: 'TakeOne.ai',
+    title: 'TakeOne.ai - Roteiros Profissionais com IA',
+    description: 'Crie roteiros incríveis para YouTube, TikTok e Instagram em segundos',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TakeOne.ai - Roteiros Profissionais com IA',
+    description: 'Crie roteiros incríveis para YouTube, TikTok e Instagram em segundos',
+  },
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
-      </body>
+    <html lang="pt-BR">
+      <body>{children}</body>
     </html>
-  );
+  )
 }
