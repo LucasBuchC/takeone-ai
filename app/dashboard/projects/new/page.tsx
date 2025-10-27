@@ -3,12 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import type { Metadata } from 'next'
 
-export const metadata: Metadata = {
-  title: 'Novo Projeto',
-  description: 'Crie um novo projeto de roteiro com IA',
-}
 
 export default function NewProjectPage() {
   const [title, setTitle] = useState('')

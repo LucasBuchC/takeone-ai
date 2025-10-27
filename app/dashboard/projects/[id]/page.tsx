@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -7,6 +8,23 @@ import { RegenerateButton } from '@/components/regenerate-button'
 type Props = {
   params: Promise<{ id: string }>
 }
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  
+  const { data: project } = await supabase
+    .from('projects')
+    .select('title')
+    .eq('id', id)
+    .single()
+  
+  return {
+    title: project?.title || 'Projeto',
+    description: `Visualize e gerencie versões do projeto ${project?.title}`,
+  }
+}
+
 
 export default async function ProjectPage({ params }: Props) {
   const { id } = await params
