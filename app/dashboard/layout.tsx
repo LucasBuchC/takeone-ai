@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { ManageSubscriptionButton } from '@/components/manage-subscription-button'
 
 export const metadata: Metadata = {
   title: 'Dashboard',
   description: 'Gerencie seus projetos e roteiros',
 }
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -19,10 +21,10 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  // Buscar perfil do usuário
+  // Buscar perfil do usuário - ADICIONAR stripe_customer_id aqui
   const { data: profile } = await supabase
     .from('profiles')
-    .select('credits_remaining, email')
+    .select('credits_remaining, email, stripe_customer_id, subscription_status')
     .eq('id', user.id)
     .single()
 
@@ -49,6 +51,12 @@ export default async function DashboardLayout({
                 >
                   Projetos
                 </Link>
+                <Link 
+                  href="/pricing" 
+                  className="text-gray-600 hover:text-blue-600 transition"
+                >
+                  Planos
+                </Link>
               </nav>
             </div>
 
@@ -60,6 +68,11 @@ export default async function DashboardLayout({
                   {profile?.credits_remaining || 0}
                 </span>
               </div>
+
+              {/* ✅ ADICIONAR AQUI - Botão de gerenciar assinatura */}
+              {profile?.stripe_customer_id && (
+                <ManageSubscriptionButton />
+              )}
 
               {/* Menu do Usuário */}
               <div className="flex items-center gap-3">

@@ -21,12 +21,14 @@ export default function Home() {
                 TakeOne.ai
               </span>
             </div>
-            <Link
-              href="/login"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
-            >
-              Entrar
-            </Link>
+            <div className="flex gap-8 text-sm">
+              <Link href="/pricing" className="hover:text-white transition">
+                Preços
+              </Link>
+              <Link href="/login" className="hover:text-white transition">
+                Login
+              </Link>
+            </div>
           </div>
         </div>
       </header>
