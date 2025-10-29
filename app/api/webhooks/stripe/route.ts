@@ -144,10 +144,14 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   if (priceId === process.env.STRIPE_PRICE_PRO) credits = 200
   if (priceId === process.env.STRIPE_PRICE_BUSINESS) credits = 999999
 
-  // @ts-ignore - Stripe types são inconsistentes entre versões
-  const periodStart = subscription.current_period_start
-  // @ts-ignore
-  const periodEnd = subscription.current_period_end
+  // Usar campos que TypeScript reconhece
+  const startDate = subscription.start_date || Math.floor(Date.now() / 1000)
+  
+  // Para a data final, calcular 30 dias após o início
+  const endDate = startDate + (30 * 24 * 60 * 60) // 30 dias em segundos
+  
+  // @ts-ignore - cancelamento
+  const cancelAtPeriodEnd = subscription.cancel_at_period_end || false
 
   const { error } = await supabaseAdmin
     .from('profiles')
@@ -155,12 +159,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       stripe_subscription_id: subscription.id,
       stripe_price_id: priceId,
       subscription_status: subscription.status,
-      subscription_period_start: new Date(periodStart * 1000).toISOString(),
-      subscription_period_end: new Date(periodEnd * 1000).toISOString(),
-      // @ts-ignore
-      cancel_at_period_end: subscription.cancel_at_period_end,
+      subscription_period_start: new Date(startDate * 1000).toISOString(),
+      subscription_period_end: new Date(endDate * 1000).toISOString(),
+      cancel_at_period_end: cancelAtPeriodEnd,
       credits_remaining: credits,
-      credits_reset_date: new Date(periodEnd * 1000).toISOString(),
+      credits_reset_date: new Date(endDate * 1000).toISOString(),
       plan_type: getPlanType(priceId),
     })
     .eq('stripe_customer_id', customerId)
@@ -172,6 +175,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   console.log(`✅ Subscription updated for customer ${customerId}`)
 }
+
 
 
 
