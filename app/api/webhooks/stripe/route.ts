@@ -105,7 +105,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const customerId = session.customer as string
   const subscriptionId = session.subscription as string
 
-  // Buscar detalhes da subscription
+  // Buscar detalhes da subscription - CORRIGIR AQUI
   const subscription = await stripe.subscriptions.retrieve(subscriptionId)
 
   const priceId = subscription.items.data[0].price.id
@@ -122,7 +122,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (priceId === process.env.STRIPE_PRICE_PRO) credits = 200
   if (priceId === process.env.STRIPE_PRICE_BUSINESS) credits = 999999
 
-  // Atualizar banco de dados
+  // Atualizar banco de dados - ADICIONAR TYPE CAST
   const { error } = await supabaseAdmin
     .from('profiles')
     .update({
@@ -130,10 +130,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       stripe_subscription_id: subscriptionId,
       stripe_price_id: priceId,
       subscription_status: subscription.status,
-      subscription_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      subscription_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      subscription_period_start: new Date((subscription.current_period_start as number) * 1000).toISOString(),
+      subscription_period_end: new Date((subscription.current_period_end as number) * 1000).toISOString(),
       credits_remaining: credits,
-      credits_reset_date: new Date(subscription.current_period_end * 1000).toISOString(),
+      credits_reset_date: new Date((subscription.current_period_end as number) * 1000).toISOString(),
       plan_type: getPlanType(priceId),
     })
     .eq('id', userId)
@@ -145,6 +145,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   console.log(`✅ Subscription activated for user ${userId}`)
 }
+
 
 // Handler: Subscription atualizada
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
@@ -163,11 +164,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       stripe_subscription_id: subscription.id,
       stripe_price_id: priceId,
       subscription_status: subscription.status,
-      subscription_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      subscription_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      subscription_period_start: new Date((subscription.current_period_start as number) * 1000).toISOString(),
+      subscription_period_end: new Date((subscription.current_period_end as number) * 1000).toISOString(),
       cancel_at_period_end: subscription.cancel_at_period_end,
       credits_remaining: credits, // Reset créditos na renovação
-      credits_reset_date: new Date(subscription.current_period_end * 1000).toISOString(),
+      credits_reset_date: new Date((subscription.current_period_end as number) * 1000).toISOString(),
       plan_type: getPlanType(priceId),
     })
     .eq('stripe_customer_id', customerId)
@@ -179,6 +180,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   console.log(`✅ Subscription updated for customer ${customerId}`)
 }
+
 
 // Handler: Subscription cancelada
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -243,7 +245,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     .update({
       subscription_status: 'active',
       credits_remaining: credits,
-      credits_reset_date: new Date(subscription.current_period_end * 1000).toISOString(),
+      credits_reset_date: new Date((subscription.current_period_end as number) * 1000).toISOString(),
     })
     .eq('stripe_customer_id', customerId)
 
@@ -254,6 +256,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
   console.log(`✅ Payment succeeded and credits reset for customer ${customerId}`)
 }
+
 
 // Helper: Determinar tipo de plano
 function getPlanType(priceId: string): string {
