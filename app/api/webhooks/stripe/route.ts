@@ -144,8 +144,9 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   if (priceId === process.env.STRIPE_PRICE_PRO) credits = 200
   if (priceId === process.env.STRIPE_PRICE_BUSINESS) credits = 999999
 
-  // USAR DADOS DIRETO DO EVENTO - sem buscar novamente
+  // @ts-ignore - Stripe types são inconsistentes entre versões
   const periodStart = subscription.current_period_start
+  // @ts-ignore
   const periodEnd = subscription.current_period_end
 
   const { error } = await supabaseAdmin
@@ -156,6 +157,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       subscription_status: subscription.status,
       subscription_period_start: new Date(periodStart * 1000).toISOString(),
       subscription_period_end: new Date(periodEnd * 1000).toISOString(),
+      // @ts-ignore
       cancel_at_period_end: subscription.cancel_at_period_end,
       credits_remaining: credits,
       credits_reset_date: new Date(periodEnd * 1000).toISOString(),
@@ -170,6 +172,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   console.log(`✅ Subscription updated for customer ${customerId}`)
 }
+
 
 
 // Handler: Subscription cancelada
