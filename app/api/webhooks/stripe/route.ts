@@ -239,3 +239,10 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 
+// Helper: Determinar tipo de plano
+function getPlanType(priceId: string): string {
+  if (priceId === process.env.STRIPE_PRICE_CREATOR) return 'creator'
+  if (priceId === process.env.STRIPE_PRICE_PRO) return 'pro'
+  if (priceId === process.env.STRIPE_PRICE_BUSINESS) return 'business'
+  return 'free'
+}
