@@ -111,33 +111,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return
   }
 
-  // Buscar subscription do Stripe
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-  const priceId = subscription.items.data[0].price.id
-
-  // Calcular créditos baseado no plano
-  let credits = 5 // Free default
-  if (priceId === process.env.STRIPE_PRICE_CREATOR) credits = 50
-  if (priceId === process.env.STRIPE_PRICE_PRO) credits = 200
-  if (priceId === process.env.STRIPE_PRICE_BUSINESS) credits = 999999
-
-  // Usar os dados diretamente do objeto subscription retornado
-  const periodStart = subscription.current_period_start
-  const periodEnd = subscription.current_period_end
-
-  // Atualizar banco de dados
+  // NÃO BUSCAR - usar dados que vêm nos próximos eventos
+  // O evento customer.subscription.updated virá logo após com todos os dados
+  
+  // Por enquanto, só salvar os IDs básicos
   const { error } = await supabaseAdmin
     .from('profiles')
     .update({
       stripe_customer_id: customerId,
       stripe_subscription_id: subscriptionId,
-      stripe_price_id: priceId,
-      subscription_status: subscription.status,
-      subscription_period_start: new Date(periodStart * 1000).toISOString(),
-      subscription_period_end: new Date(periodEnd * 1000).toISOString(),
-      credits_remaining: credits,
-      credits_reset_date: new Date(periodEnd * 1000).toISOString(),
-      plan_type: getPlanType(priceId),
+      subscription_status: 'active',
     })
     .eq('id', userId)
 
@@ -146,8 +129,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     throw error
   }
 
-  console.log(`✅ Subscription activated for user ${userId}`)
+  console.log(`✅ Customer linked for user ${userId}. Waiting for subscription.updated event...`)
 }
+
 
 // Handler: Subscription atualizada
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
@@ -160,6 +144,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   if (priceId === process.env.STRIPE_PRICE_PRO) credits = 200
   if (priceId === process.env.STRIPE_PRICE_BUSINESS) credits = 999999
 
+  // USAR DADOS DIRETO DO EVENTO - sem buscar novamente
   const periodStart = subscription.current_period_start
   const periodEnd = subscription.current_period_end
 
@@ -185,6 +170,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   console.log(`✅ Subscription updated for customer ${customerId}`)
 }
+
 
 // Handler: Subscription cancelada
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -231,27 +217,13 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 // Handler: Pagamento bem sucedido (renovação)
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string
-  const subscriptionId = invoice.subscription
 
-  if (!subscriptionId) return // Não é uma subscription
-
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId as string)
-  const priceId = subscription.items.data[0].price.id
-
-  // Resetar créditos na renovação
-  let credits = 5
-  if (priceId === process.env.STRIPE_PRICE_CREATOR) credits = 50
-  if (priceId === process.env.STRIPE_PRICE_PRO) credits = 200
-  if (priceId === process.env.STRIPE_PRICE_BUSINESS) credits = 999999
-
-  const periodEnd = subscription.current_period_end
-
+  // Não precisa buscar subscription - o evento subscription.updated virá depois
+  // Apenas marcar como ativo
   const { error } = await supabaseAdmin
     .from('profiles')
     .update({
       subscription_status: 'active',
-      credits_remaining: credits,
-      credits_reset_date: new Date(periodEnd * 1000).toISOString(),
     })
     .eq('stripe_customer_id', customerId)
 
@@ -260,13 +232,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     throw error
   }
 
-  console.log(`✅ Payment succeeded and credits reset for customer ${customerId}`)
+  console.log(`✅ Payment succeeded for customer ${customerId}`)
 }
 
-// Helper: Determinar tipo de plano
-function getPlanType(priceId: string): string {
-  if (priceId === process.env.STRIPE_PRICE_CREATOR) return 'creator'
-  if (priceId === process.env.STRIPE_PRICE_PRO) return 'pro'
-  if (priceId === process.env.STRIPE_PRICE_BUSINESS) return 'business'
-  return 'free'
-}
+
