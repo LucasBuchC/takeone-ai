@@ -16,12 +16,13 @@ export default async function PricingPage() {
 
   if (user) {
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('stripe_price_id')
+      .from('takeone.profiles')
+      .select('subscription_plan')
       .eq('id', user.id)
       .single()
 
-    currentPriceId = profile?.stripe_price_id || null
+    // Mapear subscription_plan para stripePriceId (simplificado)
+    currentPriceId = profile?.subscription_plan || null
   }
 
   return (

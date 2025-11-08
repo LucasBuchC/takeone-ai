@@ -5,16 +5,13 @@ export async function getUserSubscription(userId: string) {
   const supabase = await createClient()
   
   const { data, error } = await supabase
-    .from('profiles')
+    .from('takeone.profiles')
     .select(`
-      stripe_customer_id,
-      stripe_subscription_id,
-      stripe_price_id,
+      subscription_id,
+      subscription_plan,
       subscription_status,
-      subscription_period_start,
-      subscription_period_end,
-      trial_ends_at,
-      cancel_at_period_end,
+      subscription_started_at,
+      subscription_ends_at,
       credits_remaining
     `)
     .eq('id', userId)

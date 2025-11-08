@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Salvar evento no banco (opcional mas recomendado)
-    await supabaseAdmin.from('stripe_events').insert({
+    await supabaseAdmin.from('takeone.stripe_events').insert({
       event_id: event.id,
       event_type: event.type,
       customer_id: (event.data.object as any).customer || null,
@@ -116,10 +116,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   
   // Por enquanto, só salvar os IDs básicos
   const { error } = await supabaseAdmin
-    .from('profiles')
+    .from('takeone.profiles')
     .update({
-      stripe_customer_id: customerId,
-      stripe_subscription_id: subscriptionId,
+      subscription_id: subscriptionId,
       subscription_status: 'active',
     })
     .eq('id', userId)
@@ -154,19 +153,16 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const cancelAtPeriodEnd = subscription.cancel_at_period_end || false
 
   const { error } = await supabaseAdmin
-    .from('profiles')
+    .from('takeone.profiles')
     .update({
-      stripe_subscription_id: subscription.id,
-      stripe_price_id: priceId,
+      subscription_id: subscription.id,
+      subscription_plan: getPlanType(priceId),
       subscription_status: subscription.status,
-      subscription_period_start: new Date(startDate * 1000).toISOString(),
-      subscription_period_end: new Date(endDate * 1000).toISOString(),
-      cancel_at_period_end: cancelAtPeriodEnd,
+      subscription_started_at: new Date(startDate * 1000).toISOString(),
+      subscription_ends_at: new Date(endDate * 1000).toISOString(),
       credits_remaining: credits,
-      credits_reset_date: new Date(endDate * 1000).toISOString(),
-      plan_type: getPlanType(priceId),
     })
-    .eq('stripe_customer_id', customerId)
+    .eq('subscription_id', customerId)
 
   if (error) {
     console.error('Error updating subscription:', error)
@@ -184,15 +180,13 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string
 
   const { error } = await supabaseAdmin
-    .from('profiles')
+    .from('takeone.profiles')
     .update({
-      subscription_status: 'canceled',
-      stripe_subscription_id: null,
-      stripe_price_id: null,
-      credits_remaining: 5, // Volta para plano free
-      plan_type: 'free',
+      subscription_status: 'cancelled',
+      subscription_plan: 'free',
+      credits_remaining: 10, // Volta para plano free
     })
-    .eq('stripe_customer_id', customerId)
+    .eq('subscription_id', customerId)
 
   if (error) {
     console.error('Error canceling subscription:', error)
@@ -207,11 +201,11 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string
 
   const { error } = await supabaseAdmin
-    .from('profiles')
+    .from('takeone.profiles')
     .update({
-      subscription_status: 'past_due',
+      subscription_status: 'expired',
     })
-    .eq('stripe_customer_id', customerId)
+    .eq('subscription_id', customerId)
 
   if (error) {
     console.error('Error updating payment failure:', error)
@@ -228,11 +222,11 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   // Não precisa buscar subscription - o evento subscription.updated virá depois
   // Apenas marcar como ativo
   const { error } = await supabaseAdmin
-    .from('profiles')
+    .from('takeone.profiles')
     .update({
       subscription_status: 'active',
     })
-    .eq('stripe_customer_id', customerId)
+    .eq('subscription_id', customerId)
 
   if (error) {
     console.error('Error updating payment success:', error)

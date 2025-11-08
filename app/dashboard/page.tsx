@@ -7,7 +7,7 @@ export default async function DashboardPage() {
 
   // Buscar projetos recentes
   const { data: projects } = await supabase
-    .from('projects')
+    .from('takeone.projects')
     .select('*')
     .eq('user_id', user!.id)
     .order('created_at', { ascending: false })
@@ -15,7 +15,7 @@ export default async function DashboardPage() {
 
   // Buscar total de roteiros gerados
   const { count: totalScripts } = await supabase
-    .from('scripts')
+    .from('takeone.scripts')
     .select('*', { count: 'exact', head: true })
     .in('project_id', projects?.map(p => p.id) || [])
 

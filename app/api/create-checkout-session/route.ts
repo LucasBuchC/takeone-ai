@@ -20,32 +20,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Price ID é obrigatório' }, { status: 400 })
     }
 
-    // Buscar ou criar customer no Stripe
+    // Buscar perfil do usuário
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('stripe_customer_id, email')
+      .from('takeone.profiles')
+      .select('email')
       .eq('id', user.id)
       .single()
 
-    let customerId = profile?.stripe_customer_id
+    // Criar customer no Stripe
+    const customer = await stripe.customers.create({
+      email: profile?.email || user.email,
+      metadata: {
+        supabase_user_id: user.id,
+      },
+    })
 
-    // Se não tem customer, criar um
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: profile?.email || user.email,
-        metadata: {
-          supabase_user_id: user.id,
-        },
-      })
-
-      customerId = customer.id
-
-      // Salvar customer_id no banco
-      await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id)
-    }
+    const customerId = customer.id
 
     // Criar Checkout Session
     const session = await stripe.checkout.sessions.create({

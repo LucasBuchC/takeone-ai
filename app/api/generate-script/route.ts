@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Verificar créditos disponíveis
     const { data: profile } = await supabase
-      .from('profiles')
+      .from('takeone.profiles')
       .select('credits_remaining')
       .eq('id', user.id)
       .single()
@@ -116,11 +116,19 @@ Inclua dicas de enquadramento e transições quando relevante.`
           const generationTime = (Date.now() - startTime) / 1000
           const tokensUsed = Math.ceil(fullContent.length / 4)
 
-          const { error: insertError } = await supabase.from('scripts').insert({
+          const { error: insertError } = await supabase.from('takeone.scripts').insert({
             project_id: projectId,
+            user_id: user.id,
             content: fullContent,
-            tokens_used: tokensUsed,
-            version: version, // Adicionar versão
+            prompt_used: prompt,
+            generation_params: {
+              tokens_used: tokensUsed,
+              generation_time: generationTime,
+              model: 'azure-openai',
+              video_type: videoType,
+              duration: duration,
+              tone: tone
+            }
           })
 
           if (insertError) {
@@ -129,18 +137,11 @@ Inclua dicas de enquadramento e transições quando relevante.`
 
           // Atualizar último prompt do projeto
           await supabase
-            .from('projects')
+            .from('takeone.projects')
             .update({ last_prompt: prompt })
             .eq('id', projectId)
             
-          // 9. Decrementar créditos do usuário
-          const { error: creditsError } = await supabase.rpc('decrement_credits', { 
-            user_id: user.id 
-          })
-
-          if (creditsError) {
-            console.error('Error decrementing credits:', creditsError)
-          }
+          // Nota: Créditos serão decrementados automaticamente pelo trigger do banco
 
           // Sinalizar fim do stream
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))

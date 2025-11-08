@@ -12,23 +12,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
-    // Buscar customer_id
+    // Buscar subscription_id
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('stripe_customer_id')
+      .from('takeone.profiles')
+      .select('subscription_id')
       .eq('id', user.id)
       .single()
 
-    if (!profile?.stripe_customer_id) {
+    if (!profile?.subscription_id) {
       return NextResponse.json(
         { error: 'Você ainda não tem uma assinatura' },
         { status: 400 }
       )
     }
 
+    // Buscar customer_id da subscription
+    const subscription = await stripe.subscriptions.retrieve(profile.subscription_id)
+    
     // Criar Portal Session
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
+      customer: subscription.customer as string,
       return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard`,
     })
 
