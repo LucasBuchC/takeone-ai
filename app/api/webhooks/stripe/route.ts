@@ -11,6 +11,7 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   {
+    db: { schema: 'takeone' },
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Salvar evento no banco (opcional mas recomendado)
-    await supabaseAdmin.from('takeone.stripe_events').insert({
+    await supabaseAdmin.from('stripe_events').insert({
       event_id: event.id,
       event_type: event.type,
       customer_id: (event.data.object as any).customer || null,
@@ -116,7 +117,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   
   // Por enquanto, só salvar os IDs básicos
   const { error } = await supabaseAdmin
-    .from('takeone.profiles')
+    .from('profiles')
     .update({
       subscription_id: subscriptionId,
       subscription_status: 'active',
@@ -153,7 +154,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const cancelAtPeriodEnd = subscription.cancel_at_period_end || false
 
   const { error } = await supabaseAdmin
-    .from('takeone.profiles')
+    .from('profiles')
     .update({
       subscription_id: subscription.id,
       subscription_plan: getPlanType(priceId),
@@ -180,7 +181,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string
 
   const { error } = await supabaseAdmin
-    .from('takeone.profiles')
+    .from('profiles')
     .update({
       subscription_status: 'cancelled',
       subscription_plan: 'free',
@@ -201,7 +202,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string
 
   const { error } = await supabaseAdmin
-    .from('takeone.profiles')
+    .from('profiles')
     .update({
       subscription_status: 'expired',
     })
@@ -222,7 +223,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   // Não precisa buscar subscription - o evento subscription.updated virá depois
   // Apenas marcar como ativo
   const { error } = await supabaseAdmin
-    .from('takeone.profiles')
+    .from('profiles')
     .update({
       subscription_status: 'active',
     })

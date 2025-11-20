@@ -23,7 +23,7 @@ export default async function DashboardLayout({
 
   // Buscar perfil do usuário - ADICIONAR stripe_customer_id aqui
   const { data: profile } = await supabase
-    .from('takeone.profiles')
+    .from('profiles')
     .select('credits_remaining, email, subscription_id, subscription_status')
     .eq('id', user.id)
     .single()

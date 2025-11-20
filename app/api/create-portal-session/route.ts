@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     // Buscar subscription_id
     const { data: profile } = await supabase
-      .from('takeone.profiles')
+      .from('profiles')
       .select('subscription_id')
       .eq('id', user.id)
       .single()

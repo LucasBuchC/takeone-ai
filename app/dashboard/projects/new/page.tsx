@@ -28,7 +28,7 @@ export default function NewProjectPage() {
       const { data: { user } } = await supabase.auth.getUser()
       
       const { data: project, error } = await supabase
-        .from('takeone.projects')
+        .from('projects')
         .insert({
           user_id: user!.id,
           title,

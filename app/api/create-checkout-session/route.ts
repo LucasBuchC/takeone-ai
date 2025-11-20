@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     // Buscar perfil do usuário
     const { data: profile } = await supabase
-      .from('takeone.profiles')
+      .from('profiles')
       .select('email')
       .eq('id', user.id)
       .single()
