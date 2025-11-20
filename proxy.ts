@@ -13,6 +13,7 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      db: { schema: 'takeone' },
       cookies: {
         getAll() {
           return request.cookies.getAll()
