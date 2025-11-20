@@ -16,7 +16,7 @@ export default async function PricingPage() {
 
   if (user) {
     const { data: profile } = await supabase
-      .from('profiles')
+      .from('takeone_profiles')
       .select('subscription_plan')
       .eq('id', user.id)
       .single()

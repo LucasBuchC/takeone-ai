@@ -5,7 +5,7 @@ export async function getUserSubscription(userId: string) {
   const supabase = await createClient()
   
   const { data, error } = await supabase
-    .from('profiles')
+    .from('takeone_profiles')
     .select(`
       subscription_id,
       subscription_plan,

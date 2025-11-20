@@ -8,7 +8,5 @@ export function createClient() {
   console.log('URL:', url)
   console.log('Key length:', key.length)
   
-  return createBrowserClient(url, key, {
-    db: { schema: 'takeone' },
-  })
+  return createBrowserClient(url, key)
 }

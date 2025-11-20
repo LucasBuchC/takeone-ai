@@ -11,8 +11,8 @@ export default async function ProjectsPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { data: projects } = await supabase
-    .from('projects')
-    .select('*, scripts(count)')
+    .from('takeone_projects')
+    .select('*, takeone_scripts(count)')
     .eq('user_id', user!.id)
     .order('created_at', { ascending: false })
 

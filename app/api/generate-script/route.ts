@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Verificar créditos disponíveis
     const { data: profile } = await supabase
-      .from('profiles')
+      .from('takeone_profiles')
       .select('credits_remaining')
       .eq('id', user.id)
       .single()
@@ -33,7 +33,6 @@ export async function POST(req: NextRequest) {
 
     // 3. Receber dados da requisição
     const body = await req.json()
-    const version = body.version || 1
     const { prompt, projectId, videoType, duration, tone } = body
 
     if (!prompt || !projectId) {
@@ -116,7 +115,7 @@ Inclua dicas de enquadramento e transições quando relevante.`
           const generationTime = (Date.now() - startTime) / 1000
           const tokensUsed = Math.ceil(fullContent.length / 4)
 
-          const { error: insertError } = await supabase.from('scripts').insert({
+          const { error: insertError } = await supabase.from('takeone_scripts').insert({
             project_id: projectId,
             user_id: user.id,
             content: fullContent,
@@ -137,7 +136,7 @@ Inclua dicas de enquadramento e transições quando relevante.`
 
           // Atualizar último prompt do projeto
           await supabase
-            .from('projects')
+            .from('takeone_projects')
             .update({ last_prompt: prompt })
             .eq('id', projectId)
             

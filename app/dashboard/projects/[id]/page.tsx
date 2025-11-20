@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = await createClient()
   
   const { data: project } = await supabase
-    .from('projects')
+    .from('takeone_projects')
     .select('title')
     .eq('id', id)
     .single()
@@ -38,13 +38,13 @@ export default async function ProjectPage({ params }: Props) {
 
   // Buscar perfil para mostrar créditos
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('takeone_profiles')
     .select('credits_remaining')
     .eq('id', user.id)
     .single()
 
   const { data: project, error: projectError } = await supabase
-    .from('projects')
+    .from('takeone_projects')
     .select('*')
     .eq('id', id)
     .eq('user_id', user.id)
@@ -55,7 +55,7 @@ export default async function ProjectPage({ params }: Props) {
   }
 
   const { data: scripts } = await supabase
-    .from('scripts')
+    .from('takeone_scripts')
     .select('*')
     .eq('project_id', id)
     .order('version', { ascending: false })
